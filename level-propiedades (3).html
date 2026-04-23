@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Level Propiedades — Departamentos disponibles</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; padding: 24px 16px; }
+  .container { max-width: 980px; margin: 0 auto; }
+  .header { background: #1a1a2e; color: white; padding: 1.5rem 2rem; border-radius: 14px; margin-bottom: 1.5rem; }
+  .logo-text { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+  .logo-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 3px; }
+  .filters { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; margin-bottom: 1.5rem; background: white; padding: 16px; border-radius: 12px; border: 1px solid #eee; align-items: end; }
+  .filter-group label { font-size: 11px; color: #888; margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500; }
+  select { width: 100%; padding: 10px 36px 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: #fafafa; color: #1a1a1a; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; cursor: pointer; }
+  select:focus { outline: none; border-color: #1a1a2e; }
+  .btn-search { background: #1a1a2e; color: white; border: none; padding: 10px 28px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 500; white-space: nowrap; }
+  .btn-search:hover { opacity: 0.85; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .stat-card { background: white; border-radius: 10px; padding: 14px 18px; border: 1px solid #eee; }
+  .stat-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .stat-val { font-size: 24px; font-weight: 600; color: #1a1a2e; }
+  .results { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: white; border: 1px solid #eee; border-radius: 14px; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s; }
+  .card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.09); transform: translateY(-2px); }
+  .card-img { width: 100%; height: 170px; object-fit: cover; background: #f0f0f0; display: block; }
+  .card-body { padding: 14px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+  .badge-comuna { font-size: 11px; background: #E6F1FB; color: #0C447C; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+  .badge-discount { font-size: 11px; background: #EAF3DE; color: #3B6D11; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+  .card-name { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 2px; line-height: 1.3; }
+  .card-desc { font-size: 12px; color: #999; margin-bottom: 10px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-price { font-size: 20px; font-weight: 700; color: #1a1a2e; margin-bottom: 2px; }
+  .card-price span { font-size: 12px; font-weight: 400; color: #999; }
+  .card-dorms { font-size: 12px; color: #888; margin-bottom: 8px; }
+  .card-footer { display: flex; gap: 8px; margin-top: 14px; }
+  .btn-ver { flex: 1; padding: 9px; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 500; text-align: center; text-decoration: none; display: block; transition: all 0.15s; }
+  .btn-ver-primary { background: #1a1a2e; color: white; border: none; }
+  .btn-ver-primary:hover { opacity: 0.85; }
+  .btn-ver-secondary { background: white; color: #1a1a1a; border: 1px solid #ddd; }
+  .btn-ver-secondary:hover { background: #f5f5f3; }
+  .empty { text-align: center; padding: 4rem 2rem; color: #aaa; grid-column: 1/-1; background: white; border-radius: 14px; border: 1px solid #eee; }
+  .footer { margin-top: 2.5rem; text-align: center; font-size: 12px; color: #bbb; padding-bottom: 2rem; }
+  .footer a { color: #888; }
+  @media (max-width: 620px) {
+    .filters { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo-text">LEVEL Propiedades</div>
+    <div class="logo-sub">Departamentos disponibles en arriendo · Santiago</div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <label>Comuna</label>
+      <select id="sel-comuna" onchange="renderCards()">
+        <option value="">Todas las comunas</option>
+        <option>Conchalí</option>
+        <option>Estación Central</option>
+        <option>Independencia</option>
+        <option>La Cisterna</option>
+        <option>La Florida</option>
+        <option>Macul</option>
+        <option>Ñuñoa</option>
+        <option>Quinta Normal</option>
+        <option>San Miguel</option>
+        <option>Santiago</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Dormitorios</label>
+      <select id="sel-dorm" onchange="renderCards()">
+        <option value="">Todos</option>
+        <option value="0">Estudio</option>
+        <option value="1">1 Dormitorio</option>
+        <option value="2">2 Dormitorios</option>
+        <option value="3">3 Dormitorios</option>
+      </select>
+    </div>
+    <button class="btn-search" onclick="renderCards()">Buscar</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="stat-label">Proyectos encontrados</div><div class="stat-val" id="count-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Precio desde</div><div class="stat-val" id="count-min">—</div></div>
+    <div class="stat-card"><div class="stat-label">Comunas</div><div class="stat-val" id="count-comunas">—</div></div>
+  </div>
+
+  <div class="results" id="results-grid"></div>
+
+  <div class="footer">
+    Datos obtenidos desde <a href="https://www.levelpropiedades.cl/proyectos" target="_blank">levelpropiedades.cl</a> —
+    Verifica disponibilidad y precios directamente en el sitio oficial.
+  </div>
+</div>
+
+<script>
+const projects = [
+  { name:"Independencia 4745", comuna:"Conchalí", dorms:[0,1,2,3], precio:307600, desc:"En Conchalí con departamentos estudio, 1, 2 y 3 dormitorios. Espacios comunes de alto nivel.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/6988d2c950526a37d7111de6_6988d28dd214f33066fd6ce8_INDEPENDENCIA%254745%2FPRINCIPAL.webp", url:"https://www.levelpropiedades.cl/proyectos/independencia-4745-conchali" },
+  { name:"Guillermo Mann 1401", comuna:"Ñuñoa", dorms:[0,1,2,3], precio:376700, desc:"En Ñuñoa, una de las comunas más cotizadas de Santiago. Estudio hasta 3 dormitorios disponibles.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/6988c26e53d8ed2951a79b53_6988c22e50526a37d70a1190_GUILLERMO%2520MANN%25201401%252FPRINCIPAL.webp", url:"https://www.levelpropiedades.cl/proyectos/guillermo-mann-1401-nunoa" },
+  { name:"San Diego 1850", comuna:"Santiago", dorms:[0,1,2], precio:292400, desc:"Diseño, confort y conectividad incomparable en pleno Santiago. Estudio, 1 y 2 dormitorios modernos.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/693869950a04b55fbd597be1__DSC8998-HDR.jpg", url:"https://www.levelpropiedades.cl/proyectos/san-diego-1850-santiago" },
+  { name:"Exequiel Fernández 6100", comuna:"La Florida", dorms:[1,2], precio:359500, desc:"Cerca de Metro L4, Mall Florida Center y ciclovías. Departamentos 1 y 2 dormitorios diseño moderno.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/69386a2f752bc27a4a54fc93__DSC7988.webp", url:"https://www.levelpropiedades.cl/proyectos/exequiel-fernandez-6100-la-florida" },
+  { name:"Nicolás Palacios 1350", comuna:"Quinta Normal", dorms:[0,1,2], precio:282400, desc:"Acceso inmediato a Metro, colegios y supermercados. Quincho, sala multiuso y lavandería.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/68a63bd6887b125ae05e1700_68a63bbc421f7f219803e7a1_NICOLAS%2520PALACIOS%25201350%252FA_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/nicolas-palacios-1350-quinta-normal-" },
+  { name:"Lo Ovalle 285", comuna:"La Cisterna", dorms:[0,1,2], precio:288400, desc:"A pasos del Metro Lo Ovalle. Cerca de supermercados, colegios y centros de salud.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/687fa5ea1e61f236fb551fcd_687fa5b2f826e0a878a7a785_LO%2520OVALLE%2520285%252Fprincipal.webp", url:"https://www.levelpropiedades.cl/proyectos/lo-ovalle-285-la-cisterna" },
+  { name:"Zañartu 1315", comuna:"Ñuñoa", dorms:[1,2], precio:365300, desc:"A pasos de Metro Ñuble y Metro Rodrigo de Araya. Descuento exclusivo en estacionamientos.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/695d761164528330a8504f1b__DSC3291-HDR.webp", url:"https://www.levelpropiedades.cl/proyectos/zanartu-1315-nunoa" },
+  { name:"Goycolea 1188", comuna:"La Cisterna", dorms:[0,1,2], precio:330000, desc:"Equilibrio entre ubicación estratégica, diseño moderno y conectividad total cerca del metro.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/682c963c0780708be80652fa_682c9634b71acd546f6ece7f_GOYCOLEA%25201136%252FPrincipal.webp", url:"https://www.levelpropiedades.cl/proyectos/goycolea-1136-la-cisterna" },
+  { name:"Aviador Acevedo 1644", comuna:"Conchalí", dorms:[0,1,2], precio:234200, desc:"Moderno edificio multifamily en Conchalí con excelente conectividad. Hasta 2 dormitorios.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67feb7714e32e653911b0e5d_67feb64166b39f5aeb7e74a9_AVIADOR%2520ACEVEDO%25201644%252FA_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/aviador-acevedo-1644-conchali" },
+  { name:"Poeta Pedro Prado 1353", comuna:"Quinta Normal", dorms:[0,1,2], precio:290000, desc:"Cerca de parques, áreas verdes, supermercados y colegios. Departamentos de diseño inteligente.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67eaf7a8a6a66a200fac5657_67eaf79b756ae539ae3479cb_POETA%2520PEDRO%2520PRADO%25201353%252FA_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/poeta-pedro-prado-1353-quinta-normal" },
+  { name:"Coronel Robles 1140", comuna:"Quinta Normal", dorms:[0,1,2], precio:274000, desc:"Hasta 2 habitaciones con excelentes terminaciones. Cerca de metro, comercio y parques.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67bf59dadd5904e664661ce9_Fachada%201.webp", url:"https://www.levelpropiedades.cl/proyectos/coronel-robles-1140-quinta-normal" },
+  { name:"Fuenzalida Urrejola 269", comuna:"La Cisterna", dorms:[0,1,2], precio:309800, desc:"Excelente ubicación en La Cisterna con espacios comunes de alto nivel ideales para compartir.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67bd329f3e637a45a237f83f_67b513a7007d7049ae87e13b_FUENZALIDA%2520URREJOLA%2520269%252FPrincipal.webp", url:"https://www.levelpropiedades.cl/proyectos/fuenzalida-urrejola-269-la-cisterna" },
+  { name:"Independencia 560", comuna:"Independencia", dorms:[0,1,2], precio:238500, desc:"Arriendo moderno y bien ubicado. Cerca de colegios, universidades, supermercados y entretención.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/6737ca4ca1da1d8a208aa7bc_6737771455302a6c8c363e1d_IMG_20241002_103831.webp", url:"https://www.levelpropiedades.cl/proyectos/independencia-560-independencia" },
+  { name:"Av. Macul 2278", comuna:"Macul", dorms:[3], precio:520000, desc:"En Macul con departamentos de 3 dormitorios y espacios comunes de alto nivel.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67377429941c204d296b05f7_67377425542a51563c5e51f1_A_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/av-macul-2278-macul" },
+  { name:"Lira 254", comuna:"Santiago", dorms:[0,1], precio:283500, desc:"En pleno Santiago Centro a pasos del metro. Departamentos estudio y 1 dormitorio.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67375a716af73b26de871167_67375a4e7f8bd0da25d15d36_A_principal.jpg.webp", url:"https://www.levelpropiedades.cl/proyectos/lira-254-santiago" },
+  { name:"Santa Elena 1670", comuna:"Santiago", dorms:[0,1,2], precio:337800, desc:"Arriendo moderno en el corazón de Santiago. Conectividad a metro y transporte público.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67351dff00aace3636a11f53_67351dee494ec88ac7f9b729_A_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/santa-elena-1670-santiago" },
+  { name:"Coronel Godoy 149", comuna:"Estación Central", dorms:[0,1,2], precio:290000, desc:"En Estación Central con espacios comunes de alto nivel. Departamentos de 1 dormitorio.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67351dbf414e8f92ca5f1090_67351dbc414e8f92ca5f0e1e_A_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/coronel-godoy-149-estacion-central" },
+  { name:"Serrano 266", comuna:"Santiago", dorms:[0,1], precio:280000, desc:"En la comuna de Santiago con departamentos de 1 dormitorio y espacios comunes de alto nivel.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67351cc06de4f20ee4f1d810_67351cbd37197d87fbe047ac_A_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/serrano-266-santiago" },
+  { name:"Apóstol Santiago 32", comuna:"Estación Central", dorms:[0,1,2], precio:280000, desc:"En Estación Central con departamentos de 1 dormitorio y excelentes espacios comunes.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67351c57c1a50055e30aff82_67351c557ef8f8c13bf30d9a_A_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/apostol-santiago-32-estacion-central" },
+  { name:"Rodrigo de Araya 3280", comuna:"Ñuñoa", dorms:[2], precio:550000, desc:"En Ñuñoa con departamentos de 2 dormitorios y espacios comunes de alto nivel.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67351b340ee4bc9f2d79676e_67351b31b644a0bccc629cbb_A_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/rodrigo-de-araya-3280-nunoa" },
+  { name:"Lazo 1350", comuna:"San Miguel", dorms:[1,2], precio:450000, desc:"En San Miguel con departamentos de 1 dormitorio y espacios comunes de alto nivel.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/673516a63247c01825f27f1e_6735160704f6352f689bfce7_A_principal.jpg.webp", url:"https://www.levelpropiedades.cl/proyectos/lazo-1350-san-miguel" },
+  { name:"José Pedro Alessandri 557", comuna:"Ñuñoa", dorms:[0,1,2], precio:420000, desc:"En Ñuñoa con departamentos de 1 dormitorio y espacios comunes de primer nivel.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/673515d0dbd12fca5bbf9d18_673515cdd820b571c0ea3221_A_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/jose-pedro-alessandri-557-nunoa" },
+  { name:"Carrión 1319", comuna:"Independencia", dorms:[0,1,2,3], precio:480000, desc:"En Independencia con departamentos hasta 3 dormitorios y espacios comunes de alto nivel.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/6735155beff29e31ffbcd28b_6735155856bd90ef09bef626_A_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/carrion-1319-independencia" },
+  { name:"Rosas 1444", comuna:"Santiago", dorms:[1,2], precio:335000, desc:"A pasos del metro en Santiago. Departamentos 1 y 2 dormitorios con espacios comunes de alto nivel.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67350e1d9de036c386da6d5b_67350e0ee1cd74e071c9be8a_A_Principal.webp", url:"https://www.levelpropiedades.cl/proyectos/rosas-1444-santiago" },
+  { name:"Coronel Souper 4250", comuna:"Estación Central", dorms:[1,2], precio:280000, desc:"Gimnasio, coworking y terraza panorámica cerca del metro en Estación Central.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67350a70347269f5ec66b7ba_67350a60d2d17b1bd775989f_A_principal.jpg.webp", url:"https://www.levelpropiedades.cl/proyectos/coronel-souper-4250-estacion-central" },
+  { name:"Vicuña Mackenna 10811", comuna:"La Florida", dorms:[1,2], precio:335000, desc:"Departamentos 1 y 2 dormitorios de estilo moderno. Cerca de metro, transporte y entretención.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/695ec3c1e0fceb53ab029157__DSC4387-HDR.jpg", url:"https://www.levelpropiedades.cl/proyectos/vicuna-mackenna-10811-la-florida" },
+  { name:"Zañartu 980 (Vitro)", comuna:"Ñuñoa", dorms:[1,2], precio:375600, desc:"A pasos de Metro Ñuble y Metro Rodrigo de Araya en Ñuñoa. Entorno bohemio y bien conectado.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/673501e7bfad4c660de8c008_673501abc8d0872487b0b4e0_A_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/zanartu-980-vitro-nunoa" },
+  { name:"Mapocho 3521", comuna:"Quinta Normal", dorms:[1,2,3], precio:294600, desc:"Departamentos amplios 1, 2 y 3 dormitorios en Quinta Normal. Cerca de parques y colegios.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/673187c0684f5cacd08153d1_67318779504194f260b1fc0a_A_principal.jpg.webp", url:"https://www.levelpropiedades.cl/proyectos/mapocho-3521-quinta-normal" },
+  { name:"Conde del Maule 4181", comuna:"Estación Central", dorms:[0,1,2], precio:273700, desc:"En Estación Central con departamentos de 1 dormitorio y espacios comunes de alto nivel.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/673182ceb8086c1cb2f2f027_673182b1684f5cacd07b9f57_A_principal.jpg.webp", url:"https://www.levelpropiedades.cl/proyectos/conde-del-maule-4181-estacion-central" },
+  { name:"Colón 6503", comuna:"La Cisterna", dorms:[0,1,2], precio:287100, desc:"En La Cisterna con departamentos de 1 dormitorio y espacios comunes de alto nivel.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67317edc59fd240ba1c0b088_67317eba42d6b73160ffb598_A_principal.jpg.webp", url:"https://www.levelpropiedades.cl/proyectos/colon-6503-la-cisterna" },
+  { name:"Alameda 4719", comuna:"Estación Central", dorms:[0,1,2], precio:253700, desc:"Quincho, cowork, gimnasio y terraza en Estación Central. Estudio, 1 y 2 dormitorios.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/695d4bf8b1cd48f714c2e8f2__DSC3819-HDR.webp", url:"https://www.levelpropiedades.cl/proyectos/alameda-4719-estacion-central" },
+  { name:"Thompson 4225", comuna:"Estación Central", dorms:[0,1,2], precio:249600, desc:"En Estación Central con departamentos de 1 dormitorio y espacios comunes de alto nivel.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/673174c5ba31b5b004eb0da2_673174b20c4363c9b95c56cd_A_principal.jpg.webp", url:"https://www.levelpropiedades.cl/proyectos/thompson-4225-estacion-central" },
+  { name:"Vicuña Mackenna 1432", comuna:"Ñuñoa", dorms:[1,2,3], precio:345400, desc:"Gimnasio, salón de eventos y piscina en Ñuñoa. Departamentos 1, 2 y 3 dormitorios.", img:"https://cdn.prod.website-files.com/67053f2d0a62a202eb8fab49/67316b4181c3c150a01c1d6f_67316aff6a4323bc095233b6_A_principal.webp", url:"https://www.levelpropiedades.cl/proyectos/edificio-vicuna-mackenna-1432-nunoa" },
+  { name:"Hipódromo Chile 1820", comuna:"Independencia", dorms:[0,1,2], precio:148700, desc:"En Independencia con excelente conectividad. Departamentos con descuento disponibles.", img:"https://cdn.prod.website-files.com/696fccafc3629a35a5d45f2a/696fccafc3629a35a5d48b39__DSC2948-HDR.webp", url:"https://www.levelpropiedades.cl/proyectos/hipodromo-chile-1820-independencia" }
+];
+
+function fmt(n) { return '$' + n.toLocaleString('es-CL'); }
+function dormLabel(d) { return d === 0 ? 'Estudio' : d + ' dorm.'; }
+
+function renderCards() {
+  const comuna = document.getElementById('sel-comuna').value;
+  const dorm = document.getElementById('sel-dorm').value;
+  const grid = document.getElementById('results-grid');
+
+  let filtered = projects;
+  if (comuna) filtered = filtered.filter(p => p.comuna === comuna);
+  if (dorm !== '') filtered = filtered.filter(p => p.dorms.includes(parseInt(dorm)));
+
+  const prices = filtered.map(p => p.precio);
+  const minPrice = prices.length ? Math.min(...prices) : 0;
+  const comunas = new Set(filtered.map(p => p.comuna)).size;
+
+  document.getElementById('count-total').textContent = filtered.length;
+  document.getElementById('count-min').textContent = prices.length ? fmt(minPrice) : '—';
+  document.getElementById('count-comunas').textContent = comunas;
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty"><div style="font-size:36px;margin-bottom:12px;">🔍</div><div style="font-size:16px;font-weight:600;color:#555;margin-bottom:6px;">Sin resultados</div><p style="font-size:13px;">Prueba cambiando los filtros</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(p => `
+    <div class="card">
+      <img class="card-img" src="${p.img}" alt="${p.name}" onerror="this.style.background='#e8e8e8';" />
+      <div class="card-body">
+        <div class="badges">
+          <span class="badge-comuna">📍 ${p.comuna}</span>
+          <span class="badge-discount">🏷 En promoción</span>
+        </div>
+        <div class="card-name">${p.name}</div>
+        <div class="card-desc">${p.desc}</div>
+        <div class="card-dorms">Tipologías: ${p.dorms.map(dormLabel).join(' · ')}</div>
+        <div class="card-price">${fmt(p.precio)} <span>/mes desde</span></div>
+        <div class="card-footer">
+          <a href="${p.url}" target="_blank" class="btn-ver btn-ver-primary">Ver detalle ↗</a>
+          <a href="https://wa.me/56950256021" target="_blank" class="btn-ver btn-ver-secondary">💬 Contactar</a>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+renderCards();
+</script>
+</body>
+</html>
